@@ -14,13 +14,14 @@ LINE_WIDTH = 10
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic-Tac-Toe")
 
-print("called")
 
 # Game board: 3x3 grid (initially empty)
 board = [["" for _ in range(3)] for _ in range(3)]
 
 # Variables to track turns and game state
 player_turn = 'X'
+running = True
+game_active = True
 
 def draw_marks():
  for row in range(3):
@@ -46,6 +47,9 @@ def check_winner():
  return None
 
 def handle_click(pos):
+ global game_active
+ if (game_active==False) :
+  return
  global player_turn
 
  x, y = pos
@@ -58,6 +62,11 @@ def handle_click(pos):
    player_turn = '0'
   else:
    player_turn = 'X'
+  winner = check_winner()
+  if winner:
+   pygame.display.set_caption(f"{winner} wins!")
+   print(f"{winner} wins!")
+   game_active = False
 
 
 # Game loop
@@ -65,6 +74,7 @@ running = True
 while running:
  for event in pygame.event.get():
   if event.type == pygame.QUIT:
+   print("quit")
    running = False
   if event.type == pygame.MOUSEBUTTONDOWN:
    handle_click(event.pos)
@@ -88,12 +98,5 @@ while running:
 
  pygame.display.update()
 
-winner = check_winner()
-if winner:
- print(f"{winner} wins!")
- running = False
-
-print("ending line?")
-
-pygame.quit()
-sys.exit()
+# pygame.quit()
+# sys.exit()
