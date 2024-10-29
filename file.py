@@ -43,7 +43,7 @@ def draw_marks():
    elif board[row][col] == '0':
     pygame.draw.circle(screen, (255, 0, 0), (col * 100 + 50, row * 100 + 50), 40, 10)
 
-def check_winner():
+def is_result():
  # Check rows, columns, and diagonals for a winner
  for row in range(3):
   if board[row][0] == board[row][1] == board[row][2] != "": 
@@ -55,6 +55,8 @@ def check_winner():
    return board[0][0]
  if board[0][2] == board[1][1] == board[2][0] != "": 
   return board[0][2]
+ if all(board[row][col] != "" for row in range(3) for col in range(3)):
+  return 'tie'
  return None
 
 def handle_click(pos):
@@ -70,9 +72,12 @@ def handle_click(pos):
    player_turn = '0'
   else:
    player_turn = 'X'
-  winner = check_winner()
-  if winner:
-   pygame.display.set_caption(f"{winner} wins!")
+  result = is_result()
+  if result:
+   if(result=='tie'):
+    pygame.display.set_caption("Tied!")
+   else:
+    pygame.display.set_caption(f"{result} wins!")
    game_active = False
 
 def draw_button():
@@ -87,6 +92,64 @@ def reset_game():
   game_active = True
   pygame.display.set_caption("Tic-Tac-Toe")
 
+def minimax(board, is_maximizing):
+  result = is_result()
+  if result == '0': # AI wins
+    return 1
+  elif result == 'X': # Player wins
+    return -1
+  elif result == 'tie': #Tie
+    return 0
+  
+  if is_maximizing: #AI's turn
+    best_score = -float('inf')
+    for row in range(3):
+      for col in range(3):
+        if board[row][col] == "":
+          board[row][col] = '0'
+          score = minimax(board, False)
+          board[row][col] = ""
+          best_score = max(score, best_score)
+    return best_score
+  else: # Player's turn
+    best_score = float('inf')
+    for row in range(3):
+      for col in range(3):
+        if board[row][col] == "":
+          board[row][col] = 'X'
+          score = minimax(board, True)
+          board[row][col] = ""
+          best_score = min(score, best_score)
+    return best_score
+
+def ai_move2():
+  global player_turn, game_active
+  if not game_active or player_turn != '0': 
+    return
+  
+  best_score = -float('inf')
+  best_move = None
+  for row in range(3):
+    for col in range(3):
+      if board[row][col] == "":
+        board[row][col] = '0'
+        score = minimax(board, False)
+        board[row][col] = ""
+        if score > best_score:
+          best_score = score
+          best_move = (row, col)
+  # if best_move:
+  row, col = best_move
+  board[row][col] = '0'
+  player_turn = 'X'
+  result = is_result()
+  if result:
+   if(result=='tie'):
+    pygame.display.set_caption("Tied!")
+   else:
+    pygame.display.set_caption(f"{result} wins!")
+   game_active = False
+
 def ai_move():
   global player_turn, game_active
 
@@ -99,9 +162,12 @@ def ai_move():
     row, col = random.choice(available_spots)
     board[row][col] = '0'
     player_turn = 'X'
-    winner = check_winner()
-    if winner:
-      pygame.display.set_caption(f"{winner} wins!")
+    result = is_result()
+    if result:
+      if(result=='tie'):
+        pygame.display.set_caption("Tied!")
+      else:
+        pygame.display.set_caption(f"{result} wins!")
       game_active = False
 
 # Game loop
@@ -116,8 +182,8 @@ while running:
     elif game_active:
       handle_click(event.pos)
 
- if ai_enabled and player_turn == '0':
-  ai_move()
+ if ai_enabled and player_turn == '0' and game_active:
+  ai_move2()
 
  screen.fill(BG_COLOR)
  draw_marks()
